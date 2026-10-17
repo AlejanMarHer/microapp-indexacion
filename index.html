@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Indexación Judicial</title>
+    <!-- Importamos Tailwind y una fuente moderna (Inter) para mejor legibilidad -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Reglas Mágicas para Impresión Nativa (Solo actúan al darle Imprimir) */
+        @media print {
+            @page { margin: 1.5cm; }
+            body { background-color: white !important; }
+            .print-hide { display: none !important; }
+            .print-clean { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; background: white !important; }
+            table { width: 100%; border-collapse: collapse; font-size: 11pt; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; background-color: #f3f4f6 !important; } 
+            tfoot { display: table-footer-group; }
+            th, td { border: 1px solid #e5e7eb; padding: 8px; }
+            /* Aseguramos que los colores de texto se mantengan en el PDF */
+            .text-emerald-700 { color: #047857 !important; }
+            .text-slate-900 { color: #0f172a !important; }
+        }
+    </style>
+</head>
+<body class="bg-blue-50/50 text-gray-800 antialiased p-4 md:p-8 print-clean">
+    
+    <!-- Contenedor Principal (Más estilizado y flotante) -->
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 print-clean">
+        
+        <!-- Encabezado UI Amigable -->
+        <div class="bg-gradient-to-r from-blue-900 to-slate-800 text-white p-8 print-hide">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Indexación Judicial</h1>
+                    <p class="text-sm md:text-base text-blue-100 mt-1 font-medium">Motor de Corrección Monetaria (DANE)</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Formulario (Textos e Inputs más grandes) -->
+        <div class="p-8 print-hide">
+            <form id="calc-form" class="space-y-6">
+                <div>
+                    <label class="block text-base font-bold text-gray-700 mb-2">💰 Capital Histórico a Indexar</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xl">$</span>
+                        <input type="number" id="capital" required min="1" step="any" class="w-full pl-10 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-xl font-semibold focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Ej: 50000000">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50/30 p-5 rounded-xl border border-blue-100/50">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">📅 Fecha Inicial (Causación)</label>
+                        <input type="month" id="fecha-inicial" required class="w-full border border-gray-200 bg-white rounded-xl p-4 text-lg font-medium focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none cursor-pointer shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">🗓️ Fecha Final (Actualización)</label>
+                        <input type="month" id="fecha-final" required class="w-full border border-gray-200 bg-white rounded-xl p-4 text-lg font-medium focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none cursor-pointer shadow-sm">
+                    </div>
+                </div>
+
+                <div id="error-msg" class="hidden text-red-700 text-base font-semibold bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm"></div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:transform active:scale-[0.99] text-white font-bold text-lg py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex justify-center items-center gap-2">
+                    Ejecutar Liquidación
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                </button>
+            </form>
+        </div>
+
+        <!-- SECCIÓN DE RESULTADOS -->
+        <div id="resultado-section" class="hidden border-t-2 border-gray-100 bg-gray-50 print-clean">
+            
+            <div id="area-impresion" class="bg-white p-8 print-clean">
+                
+                <!-- Encabezado del Dictamen (Solo visible en Impresión y UI) -->
+                <div class="mb-8 pb-6 border-b-2 border-gray-100 text-center">
+                    <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">Dictamen Técnico de Liquidación</h2>
+                    <p class="text-base text-gray-500 mt-2 font-medium">Cálculo de Corrección Monetaria e Indexación de Capital</p>
+                </div>
+
+                <!-- El Gran Total Destacado -->
+                <div class="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-6 text-center shadow-sm">
+                    <h2 class="text-sm font-black text-emerald-600 uppercase tracking-widest mb-1">Total Capital Actualizado</h2>
+                    <p id="valor-actualizado" class="text-4xl md:text-5xl font-black text-emerald-700 drop-shadow-sm">$0</p>
+                </div>
+                
+                <div class="mt-8">
+                    <label class="block text-base font-bold text-slate-800 mb-3">Sustento Jurídico y Fórmula Aplicada:</label>
+                    <div class="bg-slate-50 border-l-4 border-slate-400 p-5 rounded-r-xl text-base text-slate-700 font-medium leading-relaxed" id="texto-legal">
+                    </div>
+                </div>
+
+                <!-- LOS BOTONES AHORA ESTÁN AQUÍ ARRIBA (Antes de la tabla) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 pt-6 border-t border-gray-100 print-hide">
+                    
+                    <button id="btn-copiar" class="w-full bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-lg py-4 px-6 rounded-xl shadow-sm transition-all flex items-center justify-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        Copiar Texto al Memorial
+                    </button>
+
+                    <button id="btn-descargar-pdf" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-lg py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                        Exportar Dictamen PDF
+                    </button>
+                </div>
+
+                <!-- Tabla Detallada Mensual -->
+                <div class="mt-10 pt-2 print-clean">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Desglose Analítico Mensual</h3>
+                    <div class="rounded-xl border-2 border-gray-100 overflow-hidden print-clean">
+                        <table class="w-full text-base text-left text-gray-600">
+                            <thead class="text-sm text-slate-700 uppercase bg-slate-100/80 font-bold border-b-2 border-gray-200">
+                                <tr>
+                                    <th scope="col" class="px-5 py-4">Mes / Año</th>
+                                    <th scope="col" class="px-5 py-4">Índice DANE</th>
+                                    <th scope="col" class="px-5 py-4">F. Acumulado</th>
+                                    <th scope="col" class="px-5 py-4 text-right">Capital Indexado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-desglose" class="divide-y divide-gray-100 bg-white">
+                                <!-- Filas JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div> 
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
